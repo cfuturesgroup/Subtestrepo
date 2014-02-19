@@ -1,0 +1,140 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<project name="notus admin project file" basedir="." default="help">
+
+    <!-- =============================================== -->
+    <!-- Target: ProjectCheckConfig                      -->
+    <!-- =============================================== -->
+    <target name="ProjectCheckConfig">
+        <!-- check notus-backend -->
+        <available file="${ADMIN_PATH}/project.xml" type="file" property="IS_ADMIN_BUILD_XML_FOUND" />
+        <if>
+            <isset property="IS_ADMIN_BUILD_XML_FOUND"/>
+                <then>
+                    <echo msg="Backend Config is ok!" />
+                </then>
+                <else>
+                    <fail message="Property ADMIN_PATH incorrect. Please check your build.prop.server file" />
+                </else>
+        </if>
+    </target>
+
+    <!-- =============================================== -->
+    <!-- Target: ProjectAfterConfig                      -->
+    <!-- =============================================== -->
+    <target name="ProjectAfterConfig">
+        <echo msg="ProjectAfterConfig" />
+    </target>
+
+    <!-- ============================================  -->
+    <!-- Target: ProjectConfig                         -->
+    <!-- ============================================  -->
+    <target name="ProjectConfig">
+
+        <!-- backend config -->
+        <echo msg="Parsing backend conf file" />
+        <copy file="${BACKEND_CONFIG_PATH}/main.template.php" tofile="${BACKEND_CONFIG_PATH}/main.php" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${BACKEND_CONFIG_PATH}/main.php" />
+        </phingcall>
+
+        <!-- console config -->
+        <echo msg="Parsing console conf file" />
+        <copy file="${CONSOLE_CONFIG_PATH}/main.template.php" tofile="${CONSOLE_CONFIG_PATH}/main.php" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${CONSOLE_CONFIG_PATH}/main.php" />
+        </phingcall>
+
+        <!-- JS config -->
+        <echo msg="Parsing JS conf file" />
+        <copy file="${BACKEND_CONFIG_PATH}/config.template.js" tofile="${BACKEND_INDEX_PATH}/js/config.js" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${BACKEND_INDEX_PATH}/js/config.js" />
+        </phingcall>
+
+        <!-- backend test config -->
+        <echo msg="Parsing backend test conf file" />
+        <copy file="${BACKEND_CONFIG_PATH}/test.template.php" tofile="${BACKEND_CONFIG_PATH}/test.php" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${BACKEND_CONFIG_PATH}/test.php" />
+        </phingcall>
+
+        <!-- backend index -->
+        <echo msg="Parsing backend index file" />
+        <copy file="${BACKEND_INDEX_PATH}/index.template.php" tofile="${BACKEND_INDEX_PATH}/index.php" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${BACKEND_INDEX_PATH}/index.php" />
+        </phingcall>
+
+        <!-- tiny_mce config -->
+        <echo msg="Parsing miny_mce config file" />
+        <copy file="${BACKEND_CONFIG_PATH}/tinymce/config.template.php" tofile="${TINY_MCE_CONFIG_PATH}/config.php" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${TINY_MCE_CONFIG_PATH}/config.php" />
+        </phingcall>
+
+        <!-- nginx config -->
+        <echo msg="Parsing NGINX conf file" />
+        <copy file="${COMMON_CONFIG_PATH}/nginx/notus-admin.template.conf" tofile="${COMMON_CONFIG_PATH}/nginx/notus-admin.conf" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${COMMON_CONFIG_PATH}/nginx/notus-admin.conf" />
+        </phingcall>
+
+        <!-- sphinx config -->
+        <echo msg="Parsing SPHINX conf file" />
+        <copy file="${COMMON_CONFIG_PATH}/sphinx/sphinx.template.conf" tofile="${COMMON_CONFIG_PATH}/sphinx/sphinx.conf" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${COMMON_CONFIG_PATH}/sphinx/sphinx.conf" />
+        </phingcall>
+        <phingcall target="RemoveConfigComments">
+            <property name="TEMPLATE_PATH" value="${COMMON_CONFIG_PATH}/sphinx/sphinx.conf" />
+        </phingcall>
+
+        <!-- crontab config -->
+        <echo msg="Parsing crontab conf file" />
+        <copy file="${COMMON_CONFIG_PATH}/crontab/crontab.template.conf" tofile="${COMMON_CONFIG_PATH}/crontab/crontab.conf" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${COMMON_CONFIG_PATH}/crontab/crontab.conf" />
+        </phingcall>
+
+        <!-- php.ini config -->
+        <echo msg="Parsing PHP ini file" />
+        <copy file="${COMMON_CONFIG_PATH}/php/php.template.ini" tofile="${COMMON_CONFIG_PATH}/php/php.ini" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${COMMON_CONFIG_PATH}/php/php.ini" />
+        </phingcall>
+        <phingcall target="RemoveConfigComments">
+            <property name="TEMPLATE_PATH" value="${COMMON_CONFIG_PATH}/php/php.ini" />
+        </phingcall>
+
+        <!-- pool.d/notus-admin-pool.conf config -->
+        <echo msg="Parsing PHP pool.d conf file" />
+        <copy file="${COMMON_CONFIG_PATH}/php/pool.d/notus-admin-pool.template.conf" tofile="${COMMON_CONFIG_PATH}/php/pool.d/notus-admin-pool.conf" overwrite="true" />
+        <phingcall target="InsertProperties" >
+            <property name="TEMPLATE_PATH" value="${COMMON_CONFIG_PATH}/php/pool.d/notus-admin-pool.conf" />
+        </phingcall>
+        <phingcall target="RemoveConfigComments">
+            <property name="TEMPLATE_PATH" value="${COMMON_CONFIG_PATH}/php/pool.d/notus-admin-pool.conf" />
+        </phingcall>
+
+        <phingcall target="CombineRoutes" />
+    </target>
+
+    <!-- =============================================== -->
+    <!-- Target: ProjectBuildClient                      -->
+    <!-- =============================================== -->
+    <target name="ProjectBuildClient">
+        <echo msg="Build client scripts for project" />
+        <phingcall target="updateAppcache"/>
+        <phingcall target="buildJS"/>
+        <phingcall target="concatCSS"/>
+        <phingcall target="GenerateJSON"/>
+    </target>
+
+    <!-- ============================================  -->
+    <!-- Target: Generate JSON                         -->
+    <!-- ============================================  -->
+    <target name="GenerateJSON" depends="config">
+        <exec passthru="true" command="${ADMIN_PATH}/yiic GenerateCategoryValues" checkreturn="true"/>
+    </target>
+
+</project>
